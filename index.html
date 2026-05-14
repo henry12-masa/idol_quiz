@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>アイドルクイズ</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+body{
+  font-family:sans-serif;
+  background:linear-gradient(135deg,#ff7eb3,#7c3aed);
+  color:#fff;
+  min-height:100vh;
+}
+
+header{text-align:center;padding:30px 15px}
+header h1{font-size:42px;color:#fff176;margin-bottom:10px}
+header p{font-weight:bold;color:#fff}
+
+.container{max-width:900px;margin:auto;padding:15px}
+
+.ad-area{
+  background:#fff;
+  padding:15px;
+  border-radius:18px;
+  margin-bottom:20px;
+}
+
+.quiz-box{
+  background:#4a044e;
+  border-radius:24px;
+  padding:25px;
+  box-shadow:0 10px 25px rgba(0,0,0,.35);
+}
+
+.top{
+  display:flex;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-bottom:20px;
+}
+
+.badge,.score{
+  padding:10px 18px;
+  border-radius:999px;
+  font-weight:bold;
+}
+
+.badge{background:#fff176;color:#3b0764}
+.score{background:#22c55e;color:#052e16}
+
+.progress{
+  width:100%;
+  height:12px;
+  background:#701a75;
+  border-radius:999px;
+  overflow:hidden;
+  margin-bottom:25px;
+}
+
+.progress-bar{
+  height:100%;
+  width:0%;
+  background:linear-gradient(90deg,#fff176,#f472b6);
+  transition:.3s;
+}
+
+#question{
+  font-size:28px;
+  font-weight:bold;
+  line-height:1.6;
+  margin-bottom:25px;
+}
+
+.choices{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:15px;
+}
+
+.choice-btn{
+  border:none;
+  background:#86198f;
+  color:#fff;
+  border:2px solid #f0abfc;
+  padding:18px;
+  border-radius:18px;
+  cursor:pointer;
+  font-size:17px;
+  font-weight:bold;
+  transition:.2s;
+}
+
+.choice-btn:hover{
+  background:#a21caf;
+  transform:translateY(-2px);
+}
+
+.correct{
+  background:#22c55e!important;
+  border-color:#22c55e!important;
+  color:#052e16!important;
+}
+
+.wrong{
+  background:#ef4444!important;
+  border-color:#ef4444!important;
+}
+
+#result{
+  margin-top:22px;
+  font-size:22px;
+  font-weight:bold;
+  min-height:40px;
+}
+
+.final{
+  text-align:center;
+  padding:40px 10px;
+}
+
+.final h2{
+  font-size:40px;
+  margin-bottom:20px;
+  color:#fff176;
+}
+
+.final p{
+  font-size:24px;
+  margin-bottom:20px;
+}
+
+.restart-btn{
+  border:none;
+  background:#fff176;
+  color:#3b0764;
+  padding:15px 30px;
+  border-radius:999px;
+  font-size:18px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+@media(max-width:700px){
+  .choices{grid-template-columns:1fr}
+  #question{font-size:22px}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>🎤 アイドルクイズ 🎤</h1>
+  <p>150問の中からランダム50問出題！回答後は自動で次へ進みます</p>
+</header>
+
+<div class="container">
+
+<div class="ad-area">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8398161859137802"
+     crossorigin="anonymous"></script>
+<!-- チェス -->
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-client="ca-pub-8398161859137802"
+     data-ad-slot="5599163841"
+     data-ad-format="auto"
+     data-full-width-responsive="true"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+</div>
+
+<div class="quiz-box" id="quizBox">
+  <div class="top">
+    <div class="badge" id="count">1 / 50</div>
+    <div class="score" id="score">正解数 0</div>
+  </div>
+
+  <div class="progress">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+  <div id="question"></div>
+  <div class="choices" id="choices"></div>
+  <div id="result"></div>
+</div>
+
+</div>
+
+<script>
+const quizData = [
+{q:"アイドルがファンの前で歌やダンスを披露するイベントは？",choices:["ライブ","会議","試験","裁判"],a:"ライブ"},
+{q:"アイドルを応援する活動を何という？",choices:["推し活","農作業","通勤","読書"],a:"推し活"},
+{q:"応援しているアイドルのことを何と呼ぶことが多い？",choices:["推し","先生","監督","審判"],a:"推し"},
+{q:"アイドルの歌や踊りを合わせた作品は？",choices:["パフォーマンス","レシート","契約書","地図"],a:"パフォーマンス"},
+{q:"アイドルグループで中心に立つメンバーは？",choices:["センター","ゴールキーパー","店長","車掌"],a:"センター"},
+{q:"アイドルの曲に合わせてファンが行う掛け声は？",choices:["コール","セーブ","ログイン","会計"],a:"コール"},
+{q:"アイドルのファンが使う光る応援グッズは？",choices:["ペンライト","懐中電灯だけ","電卓","定規"],a:"ペンライト"},
+{q:"アイドルの写真付き商品として多いものは？",choices:["生写真","切手だけ","領収書","名刺だけ"],a:"生写真"},
+{q:"アイドルがCD発売などで行う交流イベントは？",choices:["握手会","入学式","健康診断","面接"],a:"握手会"},
+{q:"アイドルの楽曲で踊りの動きを何という？",choices:["振付","校則","献立","路線図"],a:"振付"},
+
+{q:"AKB48の代表曲として有名なのは？",choices:["恋するフォーチュンクッキー","Love so sweet","硝子の少年","ultra soul"],a:"恋するフォーチュンクッキー"},
+{q:"AKB48の楽曲『ヘビーローテーション』で有名なセンターは？",choices:["大島優子","白石麻衣","百田夏菜子","西野七瀬"],a:"大島優子"},
+{q:"AKB48の総選挙で有名になったイベントは？",choices:["選抜総選挙","箱根駅伝","甲子園","紅白審査"],a:"選抜総選挙"},
+{q:"AKB48の活動拠点として有名な場所は？",choices:["秋葉原","渋谷","横浜","札幌"],a:"秋葉原"},
+{q:"AKB48の姉妹グループで大阪を拠点にしたグループは？",choices:["NMB48","SKE48","HKT48","NGT48"],a:"NMB48"},
+{q:"AKB48の姉妹グループで名古屋・栄を拠点にしたグループは？",choices:["SKE48","NMB48","HKT48","STU48"],a:"SKE48"},
+{q:"AKB48の姉妹グループで福岡・博多を拠点にしたグループは？",choices:["HKT48","SKE48","NMB48","NGT48"],a:"HKT48"},
+{q:"AKB48の姉妹グループで瀬戸内を拠点にしたグループは？",choices:["STU48","SKE48","NMB48","HKT48"],a:"STU48"},
+{q:"AKB48の楽曲『会いたかった』の歌詞で印象的な言葉は？",choices:["会いたかった","ありがとう","さくら","希望"],a:"会いたかった"},
+{q:"AKB48でファン投票によって歌唱メンバーを決める仕組みは？",choices:["総選挙","抽選会","入試","面談"],a:"総選挙"},
+
+{q:"乃木坂46の代表曲として有名なのは？",choices:["インフルエンサー","ヘビーローテーション","LOVEマシーン","ポリリズム"],a:"インフルエンサー"},
+{q:"乃木坂46の楽曲『裸足でSummer』で有名な夏らしい雰囲気は？",choices:["爽やか","ホラー","時代劇","戦争"],a:"爽やか"},
+{q:"乃木坂46の冠番組として知られるものは？",choices:["乃木坂工事中","笑点","徹子の部屋","情熱大陸"],a:"乃木坂工事中"},
+{q:"乃木坂46の姉妹グループにあたるのは？",choices:["櫻坂46","TOKIO","B'z","GLAY"],a:"櫻坂46"},
+{q:"乃木坂46の元メンバーとして有名な白石麻衣の愛称は？",choices:["まいやん","あっちゃん","ゆきりん","れにちゃん"],a:"まいやん"},
+{q:"乃木坂46の元メンバーとして有名な西野七瀬の愛称は？",choices:["なぁちゃん","まいやん","みーぱん","あーりん"],a:"なぁちゃん"},
+{q:"乃木坂46の楽曲『シンクロニシティ』で有名なジャンルは？",choices:["アイドルソング","演歌","クラシック","童謡"],a:"アイドルソング"},
+{q:"乃木坂46のライブでファンが使うことが多いものは？",choices:["サイリウム","バット","将棋盤","包丁"],a:"サイリウム"},
+{q:"乃木坂46のグループ名に含まれる地名は？",choices:["乃木坂","秋葉原","博多","栄"],a:"乃木坂"},
+{q:"乃木坂46の公式ライバルとして始まったグループは？",choices:["AKB48","嵐","SMAP","Perfume"],a:"AKB48"},
+
+{q:"櫻坂46の前身グループ名は？",choices:["欅坂46","乃木坂46","AKB48","日向坂46"],a:"欅坂46"},
+{q:"欅坂46の代表曲として有名なのは？",choices:["サイレントマジョリティー","インフルエンサー","恋チュン","LOVEマシーン"],a:"サイレントマジョリティー"},
+{q:"日向坂46の前身にあたるグループ名は？",choices:["けやき坂46","乃木坂46","AKB48","SKE48"],a:"けやき坂46"},
+{q:"日向坂46のファンの愛称は？",choices:["おひさま","乃木オタ","モノノフ","ティアラ"],a:"おひさま"},
+{q:"櫻坂46のグループ名に含まれる花は？",choices:["桜","梅","桃","椿"],a:"桜"},
+{q:"日向坂46のグループ名に含まれる言葉は？",choices:["日向","月影","星空","雪原"],a:"日向"},
+{q:"欅坂46の楽曲で力強いメッセージ性がある代表曲は？",choices:["不協和音","ポリリズム","会いたかった","宙船"],a:"不協和音"},
+{q:"日向坂46の冠番組として知られるものは？",choices:["日向坂で会いましょう","乃木坂工事中","Mステ","笑点"],a:"日向坂で会いましょう"},
+{q:"櫻坂46の冠番組として知られるものは？",choices:["そこ曲がったら、櫻坂？","徹子の部屋","紅白","情熱大陸"],a:"そこ曲がったら、櫻坂？"},
+{q:"坂道グループで共通して多い活動は？",choices:["歌とダンス","野球","将棋","料理店経営"],a:"歌とダンス"},
+
+{q:"ももいろクローバーZの代表曲は？",choices:["行くぜっ！怪盗少女","恋するフォーチュンクッキー","ポリリズム","硝子の少年"],a:"行くぜっ！怪盗少女"},
+{q:"ももいろクローバーZのファンの愛称は？",choices:["モノノフ","おひさま","ティアラ","アラシック"],a:"モノノフ"},
+{q:"ももいろクローバーZの愛称は？",choices:["ももクロ","モー娘。","エビ中","乃木坂"],a:"ももクロ"},
+{q:"ももクロの百田夏菜子のイメージカラーとして有名なのは？",choices:["赤","青","緑","黒"],a:"赤"},
+{q:"ももクロの玉井詩織のイメージカラーとして有名なのは？",choices:["黄色","赤","紫","黒"],a:"黄色"},
+{q:"ももクロの佐々木彩夏のイメージカラーとして有名なのは？",choices:["ピンク","緑","青","白"],a:"ピンク"},
+{q:"ももクロの高城れにのイメージカラーとして有名なのは？",choices:["紫","赤","黄色","青"],a:"紫"},
+{q:"ももクロのライブの特徴として近いものは？",choices:["全力パフォーマンス","静かな朗読","落語だけ","料理実演"],a:"全力パフォーマンス"},
+{q:"ももクロの楽曲『走れ！』の雰囲気に近いものは？",choices:["元気","暗い","無音","ホラー"],a:"元気"},
+{q:"ももクロがよく呼ばれるジャンルは？",choices:["女性アイドルグループ","ロックバンド","漫才コンビ","スポーツチーム"],a:"女性アイドルグループ"},
+
+{q:"モーニング娘。の代表曲は？",choices:["LOVEマシーン","インフルエンサー","白日","Lemon"],a:"LOVEマシーン"},
+{q:"モーニング娘。をプロデュースした人物として有名なのは？",choices:["つんく♂","秋元康","小室哲哉","久石譲"],a:"つんく♂"},
+{q:"モーニング娘。が所属するアイドル系プロジェクトは？",choices:["ハロー！プロジェクト","坂道シリーズ","LDH","スターダスト"],a:"ハロー！プロジェクト"},
+{q:"モーニング娘。の略称は？",choices:["モー娘。","ももクロ","乃木坂","エビ中"],a:"モー娘。"},
+{q:"『ザ☆ピ〜ス！』で知られるグループは？",choices:["モーニング娘。","AKB48","Perfume","SPEED"],a:"モーニング娘。"},
+{q:"『恋愛レボリューション21』で知られるグループは？",choices:["モーニング娘。","乃木坂46","欅坂46","BiSH"],a:"モーニング娘。"},
+{q:"モーニング娘。のメンバー加入・卒業の仕組みに近いものは？",choices:["世代交代","固定メンバー制のみ","選手交代なし","完全ソロ"],a:"世代交代"},
+{q:"ハロプロのグループに多い活動は？",choices:["歌とダンス","裁判","農業だけ","将棋"],a:"歌とダンス"},
+{q:"モーニング娘。の楽曲でよく見られる特徴は？",choices:["フォーメーションダンス","落語","演劇だけ","手品"],a:"フォーメーションダンス"},
+{q:"アイドルの卒業とは何を意味することが多い？",choices:["グループを離れること","学校だけを卒業すること","試験に合格すること","海外旅行"],a:"グループを離れること"},
+
+{q:"Perfumeの代表曲として有名なのは？",choices:["ポリリズム","LOVEマシーン","女々しくて","Pretender"],a:"ポリリズム"},
+{q:"Perfumeの楽曲で有名なものは？",choices:["チョコレイト・ディスコ","世界に一つだけの花","ultra soul","桜坂"],a:"チョコレイト・ディスコ"},
+{q:"Perfumeの特徴として近いものは？",choices:["テクノポップ","演歌","漫才","時代劇"],a:"テクノポップ"},
+{q:"Perfumeのメンバー人数は？",choices:["3人","5人","7人","48人"],a:"3人"},
+{q:"Perfumeのダンスで特徴的なのは？",choices:["精密なシンクロ","即興漫才","殺陣だけ","野球フォーム"],a:"精密なシンクロ"},
+{q:"Perfumeのメンバー、あ〜ちゃんの表記に近いものは？",choices:["あ〜ちゃん","あっちゃん","まいやん","なぁちゃん"],a:"あ〜ちゃん"},
+{q:"Perfumeのメンバー、のっちの表記に近いものは？",choices:["のっち","ノブ","ノッチだけ","のの"],a:"のっち"},
+{q:"Perfumeのメンバー、かしゆかの表記に近いものは？",choices:["かしゆか","ゆきりん","まゆゆ","れにちゃん"],a:"かしゆか"},
+{q:"Perfumeのライブ演出でよく注目されるものは？",choices:["映像や照明","料理","落語","裁判"],a:"映像や照明"},
+{q:"Perfumeの活動ジャンルに近いものは？",choices:["女性音楽グループ","野球チーム","俳優劇団のみ","漫才コンビ"],a:"女性音楽グループ"},
+
+{q:"BiSHはどんなグループとして知られた？",choices:["楽器を持たないパンクバンド","演歌デュオ","漫才コンビ","野球チーム"],a:"楽器を持たないパンクバンド"},
+{q:"BiSHの代表曲として有名なのは？",choices:["オーケストラ","LOVEマシーン","恋チュン","ポリリズム"],a:"オーケストラ"},
+{q:"私立恵比寿中学の略称は？",choices:["エビ中","ももクロ","モー娘。","乃木坂"],a:"エビ中"},
+{q:"私立恵比寿中学は何系のグループ？",choices:["女性アイドルグループ","ロックバンドだけ","漫才コンビ","俳優劇団"],a:"女性アイドルグループ"},
+{q:"でんぱ組.incの特徴に近いものは？",choices:["個性的なアイドルグループ","野球チーム","落語家集団","料理研究会"],a:"個性的なアイドルグループ"},
+{q:"BABYMETALの特徴として近いものは？",choices:["メタルとアイドルの融合","演歌のみ","漫才のみ","クラシック専門"],a:"メタルとアイドルの融合"},
+{q:"BABYMETALの代表曲として有名なのは？",choices:["ギミチョコ！！","LOVEマシーン","会いたかった","ポリリズム"],a:"ギミチョコ！！"},
+{q:"女性アイドルがステージで行うことが多いのは？",choices:["歌とダンス","手術","裁判","採掘"],a:"歌とダンス"},
+{q:"アイドルグループで一人ずつ色が決まっているものは？",choices:["メンバーカラー","身長カラー","学校カラー","交通カラー"],a:"メンバーカラー"},
+{q:"ライブでファンが色を合わせるグッズは？",choices:["ペンライト","鉛筆","はさみ","封筒"],a:"ペンライト"},
+
+{q:"男性アイドルグループ『嵐』の代表曲は？",choices:["Love so sweet","Lemon","白日","ロビンソン"],a:"Love so sweet"},
+{q:"嵐のメンバー人数は？",choices:["5人","3人","7人","9人"],a:"5人"},
+{q:"SMAPの代表曲は？",choices:["世界に一つだけの花","インフルエンサー","ポリリズム","女々しくて"],a:"世界に一つだけの花"},
+{q:"KinKi Kidsの代表曲は？",choices:["硝子の少年","LOVEマシーン","白日","前前前世"],a:"硝子の少年"},
+{q:"TOKIOの代表曲として有名なのは？",choices:["宙船","会いたかった","Pretender","ポリリズム"],a:"宙船"},
+{q:"KAT-TUNのデビュー曲として有名なのは？",choices:["Real Face","硝子の少年","Love so sweet","D.D."],a:"Real Face"},
+{q:"Snow Manのデビュー曲として有名なのは？",choices:["D.D.","Real Face","初心LOVE","宙船"],a:"D.D."},
+{q:"SixTONESのデビュー曲として有名なのは？",choices:["Imitation Rain","D.D.","Real Face","シンデレラガール"],a:"Imitation Rain"},
+{q:"King & Princeのデビュー曲として有名なのは？",choices:["シンデレラガール","初心LOVE","D.D.","宙船"],a:"シンデレラガール"},
+{q:"なにわ男子のデビュー曲として有名なのは？",choices:["初心LOVE","D.D.","Real Face","硝子の少年"],a:"初心LOVE"},
+
+{q:"K-POPアイドルで世界的に有名な男性グループは？",choices:["BTS","SMAP","嵐","TOKIO"],a:"BTS"},
+{q:"BTSのファンネームは？",choices:["ARMY","モノノフ","おひさま","ティアラ"],a:"ARMY"},
+{q:"BLACKPINKはどんなグループ？",choices:["K-POP女性グループ","日本の漫才コンビ","野球チーム","映画制作会社"],a:"K-POP女性グループ"},
+{q:"TWICEはどんなグループ？",choices:["K-POP女性グループ","男性ロックバンド","声優ユニットだけ","劇団"],a:"K-POP女性グループ"},
+{q:"K-POPで練習生制度に近いものは？",choices:["デビュー前に長く訓練する仕組み","試験なしで即デビュー","スポーツだけ","料理学校"],a:"デビュー前に長く訓練する仕組み"},
+{q:"K-POPで重視される要素として近いものは？",choices:["歌・ダンス・ビジュアル","釣り","囲碁","裁判"],a:"歌・ダンス・ビジュアル"},
+{q:"K-POPの楽曲でよく公開される映像は？",choices:["ミュージックビデオ","領収書","履歴書","地図"],a:"ミュージックビデオ"},
+{q:"アイドルのダンス練習動画は何と呼ばれやすい？",choices:["ダンスプラクティス","料理動画","交通情報","天気予報"],a:"ダンスプラクティス"},
+{q:"ファンが推しの誕生日を祝う広告は？",choices:["センイル広告","求人広告","不動産広告","選挙広告"],a:"センイル広告"},
+{q:"K-POPでアルバム購入特典に多いカードは？",choices:["トレカ","定期券","診察券","図書カードだけ"],a:"トレカ"},
+
+{q:"アイドルのライブ前に販売される商品を何という？",choices:["グッズ","食材","薬","部品"],a:"グッズ"},
+{q:"アイドルの公式写真集は何を集めたもの？",choices:["写真","契約書","楽譜だけ","地図"],a:"写真"},
+{q:"アイドルの歌詞を覚えて一緒に歌うことは？",choices:["歌唱応援","採掘","裁判","料理"],a:"歌唱応援"},
+{q:"ファンが推しの色を身につけることは？",choices:["メンバーカラー応援","避難訓練","配達","会議"],a:"メンバーカラー応援"},
+{q:"アイドルの新曲発売を知らせる活動は？",choices:["プロモーション","健康診断","面接","授業"],a:"プロモーション"},
+{q:"アイドルが雑誌の表紙に出ることを何という？",choices:["表紙掲載","校内放送","給食当番","投票所"],a:"表紙掲載"},
+{q:"アイドルの公式SNSでよく投稿されるものは？",choices:["活動情報","税務書類","病院予約","道路工事"],a:"活動情報"},
+{q:"アイドルのファンクラブ特典として多いものは？",choices:["先行チケット","運転免許","保険証","住民票"],a:"先行チケット"},
+{q:"アイドルのライブで観客が守るべきものは？",choices:["マナー","無断撮影","割り込み","大声の妨害"],a:"マナー"},
+{q:"アイドルのイベントで禁止されやすい行為は？",choices:["迷惑行為","拍手","応援","着席"],a:"迷惑行為"},
+
+{q:"アイドルのデビューとは？",choices:["公式に活動を始めること","引退すること","学校に入ること","旅行に行くこと"],a:"公式に活動を始めること"},
+{q:"アイドルの卒業公演とは？",choices:["最後のライブや公演","初めての面接","学校の試験","料理大会"],a:"最後のライブや公演"},
+{q:"アイドルのオーディションとは？",choices:["新メンバーなどを選ぶ審査","買い物","通院","旅行"],a:"新メンバーなどを選ぶ審査"},
+{q:"アイドルの練習で多いものは？",choices:["歌とダンス","裁判","農作業のみ","将棋"],a:"歌とダンス"},
+{q:"アイドルがファンに向けて配信することは？",choices:["ライブ配信","天気観測","道路工事","会計処理"],a:"ライブ配信"},
+{q:"アイドルの自己紹介でよく出るものは？",choices:["名前や担当カラー","住所の詳細","銀行口座","暗証番号"],a:"名前や担当カラー"},
+{q:"アイドルの活動休止とは？",choices:["一時的に活動を休むこと","必ず引退すること","改名だけ","海外旅行"],a:"一時的に活動を休むこと"},
+{q:"アイドルのソロ曲とは？",choices:["一人で歌う曲","全員で歌う曲だけ","演奏なしの曲","無音"],a:"一人で歌う曲"},
+{q:"アイドルグループのユニット曲とは？",choices:["一部メンバーで歌う曲","全員欠席の曲","観客が歌う曲","司会者の曲"],a:"一部メンバーで歌う曲"},
+{q:"アイドルのリーダーの役割に近いものは？",choices:["グループをまとめる","照明だけ担当","客席販売だけ","運転だけ"],a:"グループをまとめる"},
+
+{q:"ライブで最初に披露される曲を何ということが多い？",choices:["オープニング曲","エンディング曲","校歌","国語"],a:"オープニング曲"},
+{q:"ライブの最後に再登場して歌うことは？",choices:["アンコール","ログアウト","清算","入場"],a:"アンコール"},
+{q:"ライブで曲と曲の間に話す時間は？",choices:["MC","HP","GPS","ATM"],a:"MC"},
+{q:"アイドルのダンス位置を何という？",choices:["フォーメーション","領収書","出席番号","座席表だけ"],a:"フォーメーション"},
+{q:"MVとは何の略？",choices:["ミュージックビデオ","マップビュー","メインボイス","マネービュー"],a:"ミュージックビデオ"},
+{q:"CD発売日の前日に店頭に並ぶことは？",choices:["フラゲ","リハーサル","卒業","解散"],a:"フラゲ"},
+{q:"アイドルの公式うちわで多いものは？",choices:["顔写真や名前","地図","献立","請求書"],a:"顔写真や名前"},
+{q:"アイドルのペンライトで変えられることが多いものは？",choices:["色","重さ","長さだけ","値段"],a:"色"},
+{q:"ファンが複数公演に参加することは？",choices:["遠征や複数参戦","退会","欠席","採点"],a:"遠征や複数参戦"},
+{q:"アイドルのライブ会場で多い場所は？",choices:["ホールやアリーナ","病院","裁判所","市場"],a:"ホールやアリーナ"},
+
+{q:"アイドルのCDに付くことが多い特典は？",choices:["応募券や写真","住民票","免許証","保険証"],a:"応募券や写真"},
+{q:"ファンが推しのグッズを並べて撮る文化は？",choices:["推し活写真","証明写真","履歴書写真","監視写真"],a:"推し活写真"},
+{q:"アイドルの誕生日を祝うイベントは？",choices:["生誕祭","入学式","株主総会","避難訓練"],a:"生誕祭"},
+{q:"アイドルが舞台で手を振ることは？",choices:["ファンサ","審査","退場","採点"],a:"ファンサ"},
+{q:"ファンサとは何に近い？",choices:["ファンへのサービス","税金の支払い","番組編集","曲作りだけ"],a:"ファンへのサービス"},
+{q:"ライブ中に推しから反応をもらうことを何ということが多い？",choices:["レス","セーブ","ログ","予約"],a:"レス"},
+{q:"アイドルのファン同士の交流は？",choices:["ファン交流","裁判","授業","工事"],a:"ファン交流"},
+{q:"推しが複数いる状態を何ということがある？",choices:["複数推し","無推し","監督","審判"],a:"複数推し"},
+{q:"グループ全体を応援することを何ということがある？",choices:["箱推し","単推し","無観客","退会"],a:"箱推し"},
+{q:"一人のメンバーを中心に応援することは？",choices:["単推し","箱推し","全落ち","無観客"],a:"単推し"},
+
+{q:"アイドル番組でよくある企画は？",choices:["ゲームやトーク","裁判","株取引","工事"],a:"ゲームやトーク"},
+{q:"アイドルが出演するバラエティで重要なのは？",choices:["トーク力","免許証","預金通帳","身分証だけ"],a:"トーク力"},
+{q:"アイドルが演技に挑戦する仕事は？",choices:["ドラマ出演","運転免許更新","投票","診察"],a:"ドラマ出演"},
+{q:"アイドルが声の仕事に挑戦することは？",choices:["声優出演","税務処理","建築","手術"],a:"声優出演"},
+{q:"アイドルがCMに出る目的に近いものは？",choices:["商品宣伝","病院予約","採掘","裁判"],a:"商品宣伝"},
+{q:"アイドルのラジオ番組で多い内容は？",choices:["トークやメール紹介","交通整理","野球審判","会計"],a:"トークやメール紹介"},
+{q:"アイドルの写真集発売イベントで多いものは？",choices:["お渡し会","運動会だけ","試験","裁判"],a:"お渡し会"},
+{q:"アイドルの舞台出演で求められる力は？",choices:["演技力","釣り力","運転技術だけ","税務知識"],a:"演技力"},
+{q:"アイドルのダンスで重要なものは？",choices:["リズム感","暗証番号","住所","通帳"],a:"リズム感"},
+{q:"アイドルの歌で重要なものは？",choices:["歌唱力","裁判力","会計力","採掘力"],a:"歌唱力"},
+
+{q:"ライブの本番前に行う確認作業は？",choices:["リハーサル","卒業式","会計","睡眠"],a:"リハーサル"},
+{q:"アイドルが新曲を初めて披露することは？",choices:["初披露","閉店","退会","延期のみ"],a:"初披露"},
+{q:"アイドルの活動予定をまとめたものは？",choices:["スケジュール","成績表","診断書","地図帳"],a:"スケジュール"},
+{q:"アイドルの衣装で重要なものは？",choices:["曲の世界観","交通ルール","税率","天気図"],a:"曲の世界観"},
+{q:"アイドルのメイクで重視されることは？",choices:["ステージ映え","燃費","速度","硬さ"],a:"ステージ映え"},
+{q:"アイドルの公式サイトに載ることが多いのは？",choices:["プロフィール","住民票","暗証番号","銀行口座"],a:"プロフィール"},
+{q:"プロフィールに多い情報は？",choices:["名前や誕生日","暗証番号","個人口座","自宅住所"],a:"名前や誕生日"},
+{q:"アイドルのSNSでファンが注意すべきことは？",choices:["マナーを守る","迷惑投稿する","個人情報を書く","なりすます"],a:"マナーを守る"},
+{q:"アイドルの無断転載は一般的に？",choices:["避けるべき行為","推奨行為","公式活動","必須条件"],a:"避けるべき行為"},
+{q:"アイドルのライブ撮影が禁止される場合、守るべきことは？",choices:["撮影しない","隠れて撮る","配信する","販売する"],a:"撮影しない"},
+
+{q:"アイドル文化で『神席』とは？",choices:["とても良い座席","神社の席","空席","販売席"],a:"とても良い座席"},
+{q:"ライブチケットの抽選に外れることは？",choices:["落選","当選","入場","発券"],a:"落選"},
+{q:"チケットが取れることは？",choices:["当選","落選","退会","延期"],a:"当選"},
+{q:"ライブ会場へ遠くから行くことは？",choices:["遠征","通院","出勤","転校"],a:"遠征"},
+{q:"アイドルのライブで販売される冊子は？",choices:["パンフレット","教科書","領収書","処方箋"],a:"パンフレット"},
+{q:"アイドルの映像作品として多いものは？",choices:["ライブBlu-ray","健康診断書","請求書","履歴書"],a:"ライブBlu-ray"},
+{q:"アイドルのファンが使う『現場』とは？",choices:["ライブやイベント会場","工事現場だけ","病院","役所"],a:"ライブやイベント会場"},
+{q:"アイドルの『新規ファン』とは？",choices:["最近ファンになった人","古い会員だけ","スタッフ","審判"],a:"最近ファンになった人"},
+{q:"長く応援しているファンを何ということがある？",choices:["古参","新人","監督","記者"],a:"古参"},
+{q:"アイドルを応援し続ける上で大切なのは？",choices:["無理なく楽しむこと","借金すること","迷惑行為","無断転載"],a:"無理なく楽しむこと"}
+];
+
+const TOTAL = 50;
+
+let selectedQuestions = [];
+let current = 0;
+let score = 0;
+
+const questionEl = document.getElementById("question");
+const choicesEl = document.getElementById("choices");
+const resultEl = document.getElementById("result");
+const countEl = document.getElementById("count");
+const scoreEl = document.getElementById("score");
+const progressBar = document.getElementById("progressBar");
+const quizBox = document.getElementById("quizBox");
+
+function shuffle(array){
+  const arr = [...array];
+  for(let i=arr.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]] = [arr[j],arr[i]];
+  }
+  return arr;
+}
+
+function generateQuestions(){
+  selectedQuestions = shuffle(quizData).slice(0,TOTAL);
+}
+
+function showQuestion(){
+  const q = selectedQuestions[current];
+
+  resultEl.innerHTML = "";
+  questionEl.innerHTML = q.q;
+  countEl.innerHTML = (current+1) + " / " + TOTAL;
+  scoreEl.innerHTML = "正解数 " + score;
+  progressBar.style.width = ((current)/TOTAL)*100 + "%";
+
+  choicesEl.innerHTML = "";
+
+  shuffle(q.choices).forEach(choice=>{
+    const btn = document.createElement("button");
+    btn.className = "choice-btn";
+    btn.innerHTML = choice;
+    btn.onclick = () => checkAnswer(btn,choice,q.a);
+    choicesEl.appendChild(btn);
+  });
+}
+
+function checkAnswer(btn,selected,correct){
+  const buttons = document.querySelectorAll(".choice-btn");
+
+  buttons.forEach(b=>{
+    b.disabled = true;
+    if(b.innerHTML === correct){
+      b.classList.add("correct");
+    }
+  });
+
+  if(selected === correct){
+    score++;
+    btn.classList.add("correct");
+    resultEl.innerHTML = "✅ 正解！";
+    resultEl.style.color = "#22c55e";
+  }else{
+    btn.classList.add("wrong");
+    resultEl.innerHTML = "❌ 不正解！ 正解は「" + correct + "」";
+    resultEl.style.color = "#ef4444";
+  }
+
+  scoreEl.innerHTML = "正解数 " + score;
+  progressBar.style.width = ((current+1)/TOTAL)*100 + "%";
+
+  setTimeout(()=>{
+    current++;
+    if(current >= TOTAL){
+      showFinal();
+    }else{
+      showQuestion();
+    }
+  },900);
+}
+
+function showFinal(){
+  const percent = Math.round((score/TOTAL)*100);
+
+  quizBox.innerHTML = `
+    <div class="final">
+      <h2>🎉 クイズ終了！</h2>
+      <p>${score} / ${TOTAL} 問正解！</p>
+      <p>正答率 ${percent}%</p>
+      <button class="restart-btn" onclick="location.reload()">もう一度遊ぶ</button>
+    </div>
+  `;
+}
+
+generateQuestions();
+showQuestion();
+</script>
+
+</body>
+</html>
